@@ -1,0 +1,372 @@
+#from random import *
+from parsetree import *
+import ply.yacc as yacc
+
+# Get the token map from the lexer.  This is required.
+from plexer import tokens, lexer
+
+# from helpers import symbolTable as SymbolTable
+# from helpers import threeAddressCode as ThreeAddressCode
+
+
+
+def p_start(p):
+    '''start : statements 
+    		| subroutine 
+    		| statements start 
+    		| subroutine start''' 
+    p[0] = treeNode('start', output, p)
+
+def p_block(p):
+    '''block : BLOCK_BEGIN statements BLOCK_END'''	
+    p[0] = treeNode('block', output, p)
+
+def p_statments(p):
+    '''statements : statement statements 
+    			| statement'''
+
+    p[0] = treeNode('statements', output, p)		
+				  
+def p_statement(p):
+	'''statement : assignment 
+				| declaration 
+				| function_call 
+				| break 
+				| continue 
+				| print 
+				| return 
+				| die 
+				| chomp
+				| expression SEMICOLON
+				| use
+				| epsilon'''
+
+	p[0] = treeNode('statement', output, p)
+
+def p_use(p):
+	'''use : USE STRICT SEMICOLON
+			| USE WARNINGS SEMICOLON'''
+
+	p[0] = treeNode('use', output, p)
+
+def p_statementList(p):
+	'''block_or_statement : block 
+						| statement'''
+
+	p[0] = treeNode('block_or_statement', output, p)
+	
+def p_statement_if(p):
+			'''statement : IF LPAR expression RPAR block_or_statement
+						| IF LPAR expression RPAR SEMICOLON'''
+
+			p[0] = treeNode('statement', output, p)
+
+def p_statement_if_else(p):
+				'''statement : IF LPAR expression RPAR block_or_statement ELSE block_or_statement'''
+
+				p[0] = treeNode('statement', output, p)				
+
+def p_statement_elsif(p):
+					'''statement : IF LPAR expression RPAR block_or_statement elsif_statements ELSE block_or_statement'''
+
+					p[0] = treeNode('statement', output, p)
+
+def p_elsif_statements(p):
+			'''elsif_statements : ELSIF LPAR expression RPAR block_or_statement elsif_statements 
+								| ELSIF LPAR expression RPAR block_or_statement'''
+
+			p[0] = treeNode('elsif_statements', output, p)					
+
+def p_while_statement(p):
+		'''statement : WHILE LPAR expression RPAR block_or_statement 
+					| WHILE LPAR expression RPAR SEMICOLON 
+					| WHILE LPAR ARRAY_VARIABLE RPAR block_or_statement 
+					| WHILE LPAR ARRAY_VARIABLE RPAR SEMICOLON
+					| WHILE LPAR LPAR SCALAR_VARIABLE COMMA SCALAR_VARIABLE RPAR ASSIGNMENT EACH LPAR HASH_VARIABLE RPAR RPAR block_or_statement
+					| WHILE LPAR LPAR SCALAR_VARIABLE COMMA SCALAR_VARIABLE RPAR ASSIGNMENT EACH LPAR HASH_VARIABLE RPAR RPAR SEMICOLON
+					| WHILE LPAR LPAR MY SCALAR_VARIABLE COMMA MY SCALAR_VARIABLE RPAR ASSIGNMENT EACH LPAR HASH_VARIABLE RPAR RPAR block_or_statement
+					| WHILE LPAR LPAR MY SCALAR_VARIABLE COMMA MY SCALAR_VARIABLE RPAR ASSIGNMENT EACH LPAR HASH_VARIABLE RPAR RPAR SEMICOLON
+					'''
+
+		p[0] = treeNode('statement', output, p)
+
+def p_do_while(p):
+			'''statement : DO block WHILE LPAR expression RPAR SEMICOLON'''
+
+			p[0] = treeNode('statement', output, p)
+					
+def p_for_statement(p):
+		'''statement : FOR LPAR assignment expression SEMICOLON expression RPAR block_or_statement
+					| FOR LPAR assignment expression SEMICOLON expression RPAR SEMICOLON'''
+
+		p[0] = treeNode('statement', output, p)
+
+def p_keys_or_values(p):
+	'''keys_or_values : KEYS 
+					| VALUES'''
+
+	p[0] = treeNode('keys_or_values', output, p)
+
+def p_foreach_statement(p):
+				'''statement : FOREACH SCALAR_VARIABLE LPAR ARRAY_VARIABLE RPAR block_or_statement
+							| FOREACH SCALAR_VARIABLE LPAR ARRAY_VARIABLE RPAR SEMICOLON
+							| FOREACH MY SCALAR_VARIABLE LPAR ARRAY_VARIABLE RPAR block_or_statement
+							| FOREACH MY SCALAR_VARIABLE LPAR ARRAY_VARIABLE RPAR SEMICOLON
+							| FOREACH SCALAR_VARIABLE LPAR keys_or_values HASH_VARIABLE RPAR block_or_statement
+							| FOREACH SCALAR_VARIABLE LPAR keys_or_values HASH_VARIABLE RPAR SEMICOLON
+							| FOREACH MY SCALAR_VARIABLE LPAR keys_or_values HASH_VARIABLE RPAR block_or_statement
+							| FOREACH MY SCALAR_VARIABLE LPAR keys_or_values HASH_VARIABLE RPAR SEMICOLON
+							'''
+
+				p[0] = treeNode('statement', output, p)
+
+def p_switch(p):
+			'''statement : SWITCH LPAR SCALAR_VARIABLE RPAR BLOCK_BEGIN cases BLOCK_END'''
+
+			p[0] = treeNode('statement', output, p)
+
+def p_cases(p):
+			'''cases : CASE expression block cases 
+						| ELSE block 
+						| epsilon'''
+
+			p[0] = treeNode('cases', output, p)
+							
+				
+def p_assignment(p):
+	''' assignment : SCALAR_VARIABLE ASSIGNMENT expression SEMICOLON
+					| ARRAY_VARIABLE ASSIGNMENT LPAR arrayList RPAR SEMICOLON 
+					| HASH_VARIABLE ASSIGNMENT LPAR hashList RPAR SEMICOLON
+					| MY SCALAR_VARIABLE ASSIGNMENT expression SEMICOLON
+					| MY ARRAY_VARIABLE ASSIGNMENT LPAR arrayList RPAR SEMICOLON 
+					| MY HASH_VARIABLE ASSIGNMENT LPAR hashList RPAR SEMICOLON
+					| SCALAR_VARIABLE ASSIGNMENT function_call
+					| MY SCALAR_VARIABLE ASSIGNMENT function_call
+					| SCALAR_VARIABLE SIMULT_ASSIGNMENT expression SEMICOLON
+					| SCALAR_VARIABLE SIMULT_ASSIGNMENT function_call'''
+
+	p[0] = treeNode('assignment', output, p)
+	
+def p_arrayList(p):
+    '''arrayList : expression COMMA arrayList 
+    			| expression'''
+
+    p[0] = treeNode('arrayList', output, p)
+
+def p_hashList(p):
+    '''hashList : expression COMMA expression COMMA hashList 
+    			| expression COMMA expression'''
+
+    p[0] = treeNode('hashList', output, p)	
+					
+def p_declaration(p):
+		'''declaration : MY SCALAR_VARIABLE SEMICOLON 
+						| MY ARRAY_VARIABLE SEMICOLON
+						| MY HASH_VARIABLE SEMICOLON'''
+
+		p[0] = treeNode('declaration', output, p)
+
+
+def p_function_call(p):
+	'''function_call : IDENTIFIER LPAR argumentList RPAR SEMICOLON'''
+
+	p[0] = treeNode('function_call', output, p)
+
+def p_argumentList(p):
+	'''argumentList : expression arguments 
+					| epsilon'''
+
+	p[0] = treeNode('argumentList', output, p)
+	
+def p_arguments(p):
+		'''arguments : COMMA expression arguments 
+					| epsilon'''
+
+		p[0] = treeNode('arguments', output, p)
+	
+def p_return(p):
+		'return : RETURN expression SEMICOLON'
+
+		p[0] = treeNode('return', output, p)
+		
+
+def  p_break(p):
+	'break : BREAK SEMICOLON'
+
+	p[0] = treeNode('break', output, p)
+	
+def p_continue(p):
+		'continue : CONTINUE SEMICOLON'
+
+		p[0] = treeNode('continue', output, p)
+
+
+def p_chomp(p):
+	'chomp : CHOMP expression SEMICOLON' 	
+
+	p[0] = treeNode('chomp', output, p)
+
+def p_subroutine(p):
+	'''subroutine : SUB IDENTIFIER block'''		
+
+	p[0] = treeNode('subroutine', output, p)
+
+############PRINT#############		
+def p_print(p):
+		'''print : PRINT printlist SEMICOLON '''
+
+		p[0] = treeNode('print', output, p)
+		
+def p_die(p):
+		'''die : DIE printlist SEMICOLON '''
+
+		p[0] = treeNode('die', output, p)		
+		
+def p_printlist(p):    # baad me karege
+#gayle ne 215 
+		'''printlist : expression'''
+
+		p[0] = treeNode('printlist', output, p)
+		
+		
+	
+	
+########################################
+############## EXPRESSIONS #############
+
+
+precedence = (
+        ('left', 'OR'),
+        ('left', 'AND'),
+        ('left', 'EQUAL', 'NOT_EQUAL'),
+        ('left', 'OP_LESS_THAN', 'OP_GREATER_THAN', 'OP_LESS_THAN_E', 'OP_GREATER_THAN_E'),
+        ('left', 'PLUS', 'MINUS'),
+        ('left', 'MULTIPLY', 'DIVIDE', 'MODULUS'),
+        ('right', 'MINUS', 'NOT'),
+        )
+
+######## UNARY EXPRESSIONS ############
+
+def p_expression_unary(p):
+    '''expression : MINUS expression 
+    			| INCREAMENT expression 
+    			| expression INCREAMENT 
+    			| DCREAMENT expression 
+    			| expression DCREAMENT''' 
+
+    p[0] = treeNode('expression', output, p)    
+
+    
+
+######## BINARY EXPRESSIONS ############
+
+def p_expression_binop(p):
+    '''expression : expression PLUS expression
+                  | expression MINUS expression
+                  | expression MULTIPLY expression
+                  | expression DIVIDE expression
+                  | expression MODULUS expression'''
+
+    p[0] = treeNode('expression', output, p)    
+
+
+######## RELATIONAL EXPRESSION ############
+
+def p_expression_relational(p):
+    '''expression : expression OP_GREATER_THAN expression
+                  | expression OP_GREATER_THAN_E expression
+                  | expression OP_LESS_THAN expression
+                  | expression OP_LESS_THAN_E expression
+                  | expression EQUAL expression
+                  | expression NOT_EQUAL expression
+                  | expression STRING_CMP expression'''
+
+    p[0] = treeNode('expression', output, p)    
+
+######## LOGICAL EXPRESSION ##############
+
+def p_expression_logical_and(p):
+    'expression : expression AND expression'        
+
+    p[0] = treeNode('expression', output, p)    
+
+
+def p_expression_logical_or(p):
+    'expression : expression OR expression'        
+
+    p[0] = treeNode('expression', output, p)    
+
+
+def p_expression_logical_not(p):
+    'expression : NOT expression'
+
+    p[0] = treeNode('expression', output, p)    
+
+######## GROUP EXPRESSION ##############
+
+def p_expression_group(p):
+    'expression : LPAR expression RPAR'
+
+    p[0] = treeNode('expression', output, p)    
+
+
+######## IDENTIFIER EXPRESSION ###########
+
+def p_expression_identifier(p):
+    '''expression : SCALAR_VARIABLE 
+    				| constant'''
+
+    p[0] = treeNode('expression', output, p)    
+
+
+def p_constant(p):
+	'''constant : INTEGER 
+					| FLOAT 
+					| HEXADECIMAL 
+					| BINARY 
+					| OCTAL
+					| EXPONANTIAL
+					| STRING
+					| PSEUDO_STRING'''
+
+	p[0] = treeNode('constant', output, p)
+
+
+
+def p_expression_input(p):
+	'expression : INPUT'
+  
+	p[0] = treeNode('expression', output, p)    
+
+
+def p_epsilon(p):
+	'epsilon :'
+
+	p[0] = treeNode('epsilon', output, p)     
+
+def p_error(p):
+    print "Syntax error in input!"
+	
+parser = yacc.yacc()
+output = file('output.dot', 'w')
+treeBegin(output)
+
+def Output(result):
+	treeEnd(output, result)
+	output.close()
+
+def testYacc(inputFile):
+    program = open(inputFile).read()
+    result = parser.parse(program)
+    print result
+    Output(result)
+	
+    # parser.parse(program, lexer=lexer, debug=1)
+
+
+
+if __name__ == "__main__":
+    from sys import argv
+    filename, inputFile = argv
+
+    testYacc(inputFile)	
