@@ -1,8 +1,10 @@
 
 
 my $a = 5;
-while($a > 0) {
+$b=$a;
+if$a > 0) {
     print "$a ";
     $a--;
 }
+else
 print "\n";

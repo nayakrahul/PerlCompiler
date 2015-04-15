@@ -10,12 +10,11 @@ print "\$names[0] = $names[0]\n";
 print "\$names[1] = $names[1]\n";
 print "\$names[2] = $names[2]\n";
 
-for($a=2,$b=4;$a<7||$b>0;$a++,--$b){
+for($a=2;$a<7;$a++){
 	$a=0;
-	if($e==1)
+	if$a==1)
 	{
-		$d++;
-		if($r<=9)
+		if$a<=9)
 			$po = 0b00011;
 	}
 	else

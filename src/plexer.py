@@ -37,6 +37,8 @@ reserved = {
  }
 
 tokens = [
+   'S_INPUT',
+   'INPUT',
    'ARRAY_VARIABLE',
    'HASH_VARIABLE',
    'SCALAR_VARIABLE',
@@ -86,11 +88,11 @@ tokens = [
    'WHITESPACE',
    'BACKSLASH',
    'STRING_CMP',
-   'INPUT',
    'PSEUDO_STRING',
    'TERNARY'
 ]+list(reserved.values())
-       
+  
+t_INPUT = r'\<\>'     
 t_PLUS = r'\+'
 t_MINUS   = r'-'
 t_MULTIPLY   = r'\*'
@@ -127,7 +129,7 @@ t_COMMA = r','
 t_BACKSLASH = r'\\'
 t_TILDA = r'\~'
 t_ignore_WHITESPACE = r"\s"
-t_INPUT = r'<STDIN>|'r'<>'
+t_S_INPUT = r'<STDIN>'
 
 def t_ignore_COMMENT(t):
    r"\#[^\n]+|"r"\=[^(=)]+\=cut"
@@ -137,12 +139,12 @@ def t_ignore_newline(t):
   r'\n+'
 
 def t_STRING(t):
-    r"[\"][^\"]*[\"]"
+    r"['][^']*[']"
     t.value = t.value[1:-1]
     return t
     
 def t_PSEUDO_STRING(t):
-  r"['][^']*[']"
+  r"[\"][^\"]*[\"]"
   t.value = t.value[1:-1]
   return t
 

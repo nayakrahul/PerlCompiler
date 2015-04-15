@@ -9,4 +9,3 @@ $hexadecimal = 0xabcd12;
 @ages = (25, 30, 40);             
 @names = ("John Paul", "Lisa", "Kumar");
 
-%data = ('John Paul', 45, 'Lisa', 30, 'Kumar', 40);
